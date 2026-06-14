@@ -14,8 +14,9 @@ a **pragmatic single Next.js app**.
 
 - **Logging in** is intentionally lightweight — there is **no real
   authentication**. You pick your name from the roster; a member can optionally
-  set a short PIN (1–4 digits, shown openly — it's a soft "it's you" gate, not a
-  secret). The choice is stored in an httpOnly cookie.
+  set a short PIN (1–4 digits) that stays private. It's a soft "it's you" gate,
+  not real security — so the app tells you **not to reuse a real PIN**. The choice
+  is stored in an httpOnly cookie.
 - **Anyone logged in** can post an event, place a bet, and settle an event.
 - **Bet types:** Over/Under on a line, Yes/No props, Multiple-choice (pick the
   winner), and Closest-guess. Payouts are either **fixed odds** (`stake ×

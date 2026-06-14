@@ -54,8 +54,10 @@ There is **no real auth**. `currentPlayer()` reads a player id from an httpOnly
 cookie. Every Supabase call runs with the **service secret key**, so there is no
 RLS backstop — authorization is whatever the action checks. That's acceptable
 for a fake-money family toy; don't carry this pattern into anything real. The PIN
-is a **public** convenience lock (1–4 digits) shown openly in the UI — it just
-confirms the right person tapped in; it is not a secret.
+is a soft 1–4 digit "it's you" gate kept **private** — never send it to the
+client (expose only a `hasPin` flag), and PIN inputs are masked. Account creation
+tells users **not to reuse a real PIN**, since it's stored in plain text and a
+logged-in member can reset anyone's via the roster.
 
 ## Bet types & settlement invariants
 
@@ -126,9 +128,8 @@ commands when the user explicitly asks.
 2. **`throw`ing from a client-invoked action** for an expected failure — return
    `{ error }` instead.
 3. **Reading the DB from a Client Component** — `src/lib/supabase/server.ts` holds
-   the secret key and must stay server-only. Pass data down as props. (PINs are
-   intentionally public, so sending them to the client is fine — but the Supabase
-   secret key never leaves the server.)
+   the secret key and must stay server-only. Pass data down as props, and **never
+   send a PIN to the client** — map it to a `hasPin` boolean at the page boundary.
 4. **Impure reads in render** (`Date.now()`, `Math.random()`) — compute at the
    server boundary and pass as a prop.
 5. **Shipping without the full verify chain.**

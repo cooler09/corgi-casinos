@@ -18,12 +18,12 @@ export default async function HomePage({
   const player = await currentPlayer();
   if (player) redirect(next);
 
-  // PINs are public in this family game, so it's fine to send them to the client.
+  // Keep PINs private — the client only needs to know whether one is set.
   const roster = (await listPlayers()).map((p) => ({
     id: p.id,
     name: p.name,
     emoji: p.emoji,
-    pin: p.pin,
+    hasPin: p.pin !== null,
   }));
 
   return <LoginScreen roster={roster} next={next} />;

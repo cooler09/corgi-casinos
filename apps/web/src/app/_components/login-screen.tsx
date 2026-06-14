@@ -15,8 +15,8 @@ interface RosterEntry {
   id: string;
   name: string;
   emoji: string;
-  // PINs are public in this family game — shown openly so anyone can tap in.
-  pin: string | null;
+  // PINs stay private — we only know whether a member set one.
+  hasPin: boolean;
 }
 
 const EMOJI_CHOICES = ['🐶', '🐕', '🦴', '🐾', '👑', '⭐', '🍀', '🎲', '🦊', '🐱', '🐢', '🦄'];
@@ -41,7 +41,7 @@ export function LoginScreen({ roster, next }: { roster: RosterEntry[]; next: str
   function choose(entry: RosterEntry) {
     setError(null);
     setPin('');
-    if (entry.pin) {
+    if (entry.hasPin) {
       setSelected(entry);
     } else {
       login(entry.id, '');
@@ -88,8 +88,8 @@ export function LoginScreen({ roster, next }: { roster: RosterEntry[]; next: str
                   {entry.emoji}
                 </span>
                 <span className="font-semibold">{entry.name}</span>
-                {entry.pin ? (
-                  <span className="text-on-surface-variant text-xs">🔢 PIN {entry.pin}</span>
+                {entry.hasPin ? (
+                  <span className="text-on-surface-variant text-xs">🔒 PIN</span>
                 ) : null}
               </button>
             </li>
@@ -147,10 +147,6 @@ function PinPrompt({
         {entry.emoji}
       </div>
       <h1 className="text-headline-sm">Enter {entry.name}&apos;s PIN</h1>
-      <p className="text-on-surface-variant text-sm">
-        No secret here — the PIN is{' '}
-        <span className="text-on-surface font-semibold">{entry.pin}</span>
-      </p>
       {error ? <Alert variant="error">{error}</Alert> : null}
       <form
         onSubmit={(e) => {
@@ -161,6 +157,7 @@ function PinPrompt({
       >
         <input
           autoFocus
+          type="password"
           inputMode="numeric"
           pattern="\d*"
           maxLength={4}
@@ -239,10 +236,11 @@ function AddMemberForm({
 
       <div>
         <label className={fieldLabelClass} htmlFor="new-pin">
-          PIN (optional, 1–4 digits — shown to everyone)
+          PIN (optional, 1–4 digits)
         </label>
         <input
           id="new-pin"
+          type="password"
           inputMode="numeric"
           maxLength={4}
           value={pin}
@@ -250,6 +248,9 @@ function AddMemberForm({
           className={fieldInputClass}
           placeholder="leave blank for no PIN"
         />
+        <p className="text-on-surface-variant mt-1 text-xs">
+          ⚠️ Don&apos;t use a real PIN — make one up just for this game.
+        </p>
       </div>
 
       <div className="flex gap-2">

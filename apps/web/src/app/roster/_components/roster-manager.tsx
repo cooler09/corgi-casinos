@@ -19,8 +19,8 @@ interface Member {
   name: string;
   emoji: string;
   balance: number;
-  // Public PIN (a soft "it's you" gate), shown openly in the roster.
-  pin: string | null;
+  // Private PIN — only whether one is set is exposed to the client.
+  hasPin: boolean;
 }
 
 const EMOJI_CHOICES = ['🐶', '🐕', '🦴', '🐾', '👑', '⭐', '🍀', '🎲', '🦊', '🐱', '🐢', '🦄'];
@@ -106,10 +106,11 @@ export function RosterManager({ members }: { members: Member[] }) {
 
         <div>
           <label className={fieldLabelClass} htmlFor="pin">
-            PIN (optional, 1–4 digits — shown to everyone)
+            PIN (optional, 1–4 digits)
           </label>
           <input
             id="pin"
+            type="password"
             inputMode="numeric"
             maxLength={4}
             value={pin}
@@ -117,6 +118,9 @@ export function RosterManager({ members }: { members: Member[] }) {
             className={fieldInputClass}
             placeholder="leave blank for no PIN"
           />
+          <p className="text-on-surface-variant mt-1 text-xs">
+            ⚠️ Don&apos;t use a real PIN — make one up just for this game.
+          </p>
         </div>
 
         <button type="submit" className={primaryButtonClass()} disabled={pending}>
@@ -139,7 +143,7 @@ function MemberRow({
   onError: (message: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [pin, setPin] = useState(member.pin ?? '');
+  const [pin, setPin] = useState('');
   const [, startTransition] = useTransition();
 
   function savePin(value: string) {
@@ -162,9 +166,7 @@ function MemberRow({
           {member.emoji}
         </span>
         <span className="font-semibold">{member.name}</span>
-        {member.pin ? (
-          <span className="text-on-surface-variant text-xs">🔢 PIN {member.pin}</span>
-        ) : null}
+        {member.hasPin ? <span className="text-on-surface-variant text-xs">🔒 PIN set</span> : null}
       </span>
 
       <span className="flex items-center gap-3">
@@ -172,6 +174,7 @@ function MemberRow({
         {editing ? (
           <span className="flex items-center gap-2">
             <input
+              type="password"
               inputMode="numeric"
               maxLength={4}
               value={pin}
@@ -187,7 +190,7 @@ function MemberRow({
             >
               Save
             </button>
-            {member.pin ? (
+            {member.hasPin ? (
               <button
                 type="button"
                 className={secondaryButtonClass('sm')}
@@ -203,11 +206,11 @@ function MemberRow({
             type="button"
             className={tonalButtonClass('sm')}
             onClick={() => {
-              setPin(member.pin ?? '');
+              setPin('');
               setEditing(true);
             }}
           >
-            {member.pin ? 'Change PIN' : 'Set PIN'}
+            {member.hasPin ? 'Change PIN' : 'Set PIN'}
           </button>
         )}
       </span>
