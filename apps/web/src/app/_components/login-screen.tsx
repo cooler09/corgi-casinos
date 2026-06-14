@@ -80,14 +80,14 @@ export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
                 type="button"
                 disabled={pending}
                 onClick={() => choose(entry)}
-                className="flex w-full flex-col items-center gap-1 rounded-2xl border border-outline bg-surface-container p-4 transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="border-outline bg-surface-container flex w-full flex-col items-center gap-1 rounded-2xl border p-4 transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 <span className="text-4xl" aria-hidden>
                   {entry.emoji}
                 </span>
                 <span className="font-semibold">{entry.name}</span>
                 {entry.hasPin ? (
-                  <span className="text-xs text-on-surface-variant">🔒 PIN</span>
+                  <span className="text-on-surface-variant text-xs">🔒 PIN</span>
                 ) : null}
               </button>
             </li>
@@ -98,7 +98,7 @@ export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
       {adding ? (
         <AddMemberForm
           pending={pending}
-          onCancel={roster.length > 0 ? () => setAdding(false) : undefined}
+          {...(roster.length > 0 ? { onCancel: () => setAdding(false) } : {})}
           onCreate={(input) => {
             setError(null);
             startTransition(async () => {
@@ -195,7 +195,7 @@ function AddMemberForm({
         e.preventDefault();
         onCreate({ name, emoji, pin });
       }}
-      className="space-y-4 rounded-2xl border border-outline bg-surface-container p-4"
+      className="border-outline bg-surface-container space-y-4 rounded-2xl border p-4"
     >
       <h2 className="text-title-lg">New family member</h2>
 
