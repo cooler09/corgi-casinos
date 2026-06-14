@@ -11,6 +11,13 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Corgi Casinos',
   description: 'A family-friendly, fake-money over/under betting game.',
+  // Private family app — keep it out of search engines. Emits
+  // <meta name="robots" content="noindex, nofollow"> on every page.
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <header className="border-b border-outline bg-surface-container">
+        <header className="border-outline bg-surface-container border-b">
           <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
             <Link href={player ? '/play' : '/'} className="text-headline-sm">
               🐶 Corgi Casinos
