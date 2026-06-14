@@ -14,7 +14,8 @@ export default async function NewEventPage() {
       <div>
         <h1 className="text-headline-lg">Post an over/under</h1>
         <p className="text-on-surface-variant">
-          Set a line and let the family bet OVER or UNDER. You (or anyone) can settle it later.
+          Set a line and let family and friends bet OVER or UNDER. You (or anyone) can settle it
+          later.
         </p>
       </div>
       <NewEventForm />

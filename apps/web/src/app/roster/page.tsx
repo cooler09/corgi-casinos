@@ -21,9 +21,9 @@ export default async function RosterPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-headline-lg">Family roster</h1>
+        <h1 className="text-headline-lg">Family &amp; friends roster</h1>
         <p className="text-on-surface-variant">
-          Add players or change a PIN. New players start with 1,000 🪙.
+          Add family or friends and manage PINs. New players start with 1,000 🪙.
         </p>
       </div>
       <RosterManager members={members} />

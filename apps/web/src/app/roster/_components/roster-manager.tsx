@@ -70,7 +70,7 @@ export function RosterManager({ members }: { members: Member[] }) {
         }}
         className="border-outline bg-surface-container space-y-4 rounded-2xl border p-4"
       >
-        <h2 className="text-title-lg">Add a family member</h2>
+        <h2 className="text-title-lg">Add family or a friend</h2>
         {error ? <Alert variant="error">{error}</Alert> : null}
 
         <div>

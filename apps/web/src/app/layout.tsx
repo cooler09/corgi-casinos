@@ -10,7 +10,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Corgi Casinos',
-  description: 'A family-friendly, fake-money over/under betting game.',
+  description: 'A fake-money over/under betting game for family and friends.',
   // Private family app — keep it out of search engines. Emits
   // <meta name="robots" content="noindex, nofollow"> on every page.
   robots: {
@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   Scoreboard
                 </Link>
                 <Link href="/roster" className="hover:text-primary">
-                  Family
+                  Family &amp; Friends
                 </Link>
                 <span className="flex items-center gap-1 font-semibold">
                   <span aria-hidden>{player.emoji}</span>

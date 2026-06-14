@@ -1,9 +1,10 @@
 # 🐶 Corgi Casinos
 
-A **family-friendly, fake-money over/under betting game**. Post an event with a
-line (e.g. _"Total goals tonight: 2.5"_), let everyone bet **OVER** or **UNDER**,
-then settle it with the real result — the app pays out fake coins to the winners
-and keeps a scoreboard. No real money, no real gambling, just family fun.
+A **fake-money over/under betting game for family and friends**. Post an event
+with a line (e.g. _"Total goals tonight: 2.5"_), let everyone bet **OVER** or
+**UNDER**, then settle it with the real result — the app pays out fake coins to
+the winners and keeps a scoreboard. No real money, no real gambling, just
+family-and-friends fun.
 
 Built from the [react-template-project](../react-template-project) baseline (its
 stack, strict-TypeScript discipline, Tailwind design tokens, and verify gate) as
@@ -21,9 +22,9 @@ a **pragmatic single Next.js app**.
 
 ## Stack
 
-| Layer    | Tech                                                               |
-| -------- | ------------------------------------------------------------------ |
-| Frontend | Next.js 16 (App Router) + React 19 + Tailwind v4                   |
+| Layer    | Tech                                                              |
+| -------- | ----------------------------------------------------------------- |
+| Frontend | Next.js 16 (App Router) + React 19 + Tailwind v4                  |
 | Logic    | Server Actions + a small pure domain layer (`src/domain`)         |
 | Data     | Supabase Postgres used as a **plain database** (no Supabase Auth) |
 | Language | TypeScript (strict + `exactOptionalPropertyTypes`)                |

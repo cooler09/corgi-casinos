@@ -116,7 +116,7 @@ export function LoginScreen({ roster, next }: { roster: RosterEntry[]; next: str
       ) : (
         <div className="text-center">
           <button type="button" className={tonalButtonClass()} onClick={() => setAdding(true)}>
-            ➕ Add a family member
+            ➕ Add family or a friend
           </button>
         </div>
       )}
@@ -203,7 +203,7 @@ function AddMemberForm({
       }}
       className="border-outline bg-surface-container space-y-4 rounded-2xl border p-4"
     >
-      <h2 className="text-title-lg">New family member</h2>
+      <h2 className="text-title-lg">Add family or a friend</h2>
 
       <div>
         <label className={fieldLabelClass} htmlFor="new-name">
