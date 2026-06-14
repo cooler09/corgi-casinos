@@ -3,9 +3,9 @@
 Navigate the journal by **initiative** (a thread of related bundles) rather than
 by date. Add a row per initiative; link the entries that belong to it.
 
-| Initiative                    | Status      | Entries    |
-| ----------------------------- | ----------- | ---------- |
-| _(example)_ Auth & onboarding | in progress | _none yet_ |
+| Initiative          | Status  | Entries                                                              |
+| ------------------- | ------- | ------------------------------------------------------------------- |
+| Project scaffolding | shipped | [2026-06-14](2026-06-14-scaffold-corgi-casinos.md) — initial build |
 
 ## How to use this index
 
