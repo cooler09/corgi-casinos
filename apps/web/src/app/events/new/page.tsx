@@ -12,9 +12,9 @@ export default async function NewEventPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-headline-lg">Post an over/under</h1>
+        <h1 className="text-headline-lg">Post a bet</h1>
         <p className="text-on-surface-variant">
-          Set a line and let family and friends bet OVER or UNDER. You (or anyone) can settle it
+          Pick a bet type, set it up, and let family and friends play. You (or anyone) can settle it
           later.
         </p>
       </div>

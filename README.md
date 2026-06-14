@@ -13,12 +13,17 @@ a **pragmatic single Next.js app**.
 ## How it works
 
 - **Logging in** is intentionally lightweight — there is **no real
-  authentication**. You pick your name from the family roster; a member can
-  optionally set a 4-digit PIN. The choice is stored in an httpOnly cookie.
+  authentication**. You pick your name from the roster; a member can optionally
+  set a short PIN (1–4 digits, shown openly — it's a soft "it's you" gate, not a
+  secret). The choice is stored in an httpOnly cookie.
 - **Anyone logged in** can post an event, place a bet, and settle an event.
+- **Bet types:** Over/Under on a line, Yes/No props, Multiple-choice (pick the
+  winner), and Closest-guess. Payouts are either **fixed odds** (`stake ×
+multiplier`) or a **shared pot** (pari-mutuel split among the winners);
+  Closest-guess is always a shared pot.
 - **Coins:** everyone starts with **1,000 🪙**. A stake is escrowed when you bet;
-  settling pays winners `stake × multiplier` (2× = even money), refunds pushes
-  (result lands exactly on the line), and keeps losers' stakes.
+  settling pays the winners, refunds pushes (and any bet nobody could win), and
+  keeps losers' stakes.
 
 ## Stack
 
@@ -37,7 +42,7 @@ apps/web/
 ├── src/app/                 # App Router pages + co-located server actions
 │   ├── page.tsx             # login (pick a player / add a member)
 │   ├── play/                # open bets + your bankroll
-│   ├── events/new/          # post an over/under
+│   ├── events/new/          # post a bet (any of the 4 kinds)
 │   ├── events/[id]/         # event detail: bet + settle
 │   ├── scoreboard/          # leaderboard
 │   ├── roster/              # manage family members + PINs

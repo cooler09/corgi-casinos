@@ -1,4 +1,4 @@
-import type { BettingEvent, EventStatus } from '../../domain/types';
+import type { BettingEvent, EventKind, EventStatus, PayoutMode } from '../../domain/types';
 import { db } from '../supabase/server';
 import type { Database } from '../supabase/types';
 
@@ -10,10 +10,14 @@ function toEvent(row: EventRow): BettingEvent {
     title: row.title,
     description: row.description,
     unit: row.unit,
+    kind: row.kind as EventKind,
+    payoutMode: row.payout_mode as PayoutMode,
     line: row.line,
+    options: row.options,
     payoutMultiplier: row.payout_multiplier,
     status: row.status as EventStatus,
     result: row.result,
+    resultText: row.result_text,
     createdBy: row.created_by,
     settledBy: row.settled_by,
     createdAt: row.created_at,
@@ -40,7 +44,10 @@ export async function createEvent(input: {
   title: string;
   description: string | null;
   unit: string;
-  line: number;
+  kind: EventKind;
+  payoutMode: PayoutMode;
+  line: number | null;
+  options: string[] | null;
   payoutMultiplier: number;
   createdBy: string;
 }): Promise<BettingEvent> {
@@ -50,7 +57,10 @@ export async function createEvent(input: {
       title: input.title,
       description: input.description,
       unit: input.unit,
+      kind: input.kind,
+      payout_mode: input.payoutMode,
       line: input.line,
+      options: input.options,
       payout_multiplier: input.payoutMultiplier,
       created_by: input.createdBy,
     })
@@ -62,15 +72,15 @@ export async function createEvent(input: {
 
 export async function markEventSettled(
   id: string,
-  result: number,
-  settledBy: string,
+  input: { result: number | null; resultText: string | null; settledBy: string },
 ): Promise<void> {
   const { error } = await db()
     .from('events')
     .update({
       status: 'settled',
-      result,
-      settled_by: settledBy,
+      result: input.result,
+      result_text: input.resultText,
+      settled_by: input.settledBy,
       settled_at: new Date().toISOString(),
     })
     .eq('id', id);

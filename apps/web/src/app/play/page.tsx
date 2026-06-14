@@ -86,20 +86,21 @@ export default async function PlayPage() {
 
                   {mine ? (
                     <p className="text-sm">
-                      Your bet:{' '}
-                      <span className={mine.direction === 'over' ? 'text-over' : 'text-under'}>
-                        {mine.direction.toUpperCase()} {event.line}
-                      </span>{' '}
-                      for {formatCoins(mine.stake)} 🪙
+                      Your bet: <MyPick wager={mine} /> for {formatCoins(mine.stake)} 🪙
                     </p>
                   ) : null}
 
                   <BetForm
                     eventId={event.id}
+                    kind={event.kind}
+                    payoutMode={event.payoutMode}
                     unit={event.unit}
                     line={event.line}
+                    options={event.options}
                     payoutMultiplier={event.payoutMultiplier}
-                    current={mine ? { direction: mine.direction, stake: mine.stake } : null}
+                    current={
+                      mine ? { pick: mine.pick, guess: mine.guess, stake: mine.stake } : null
+                    }
                   />
                 </li>
               );
@@ -135,6 +136,21 @@ export default async function PlayPage() {
       ) : null}
     </div>
   );
+}
+
+function MyPick({ wager }: { wager: Wager }) {
+  if (wager.guess !== null) {
+    return <span className="text-on-surface font-semibold">guessed {wager.guess}</span>;
+  }
+  const pick = wager.pick ?? '';
+  const tone =
+    pick === 'over' || pick === 'yes'
+      ? 'text-over'
+      : pick === 'under' || pick === 'no'
+        ? 'text-under'
+        : 'text-on-surface';
+  const label = ['over', 'under', 'yes', 'no'].includes(pick) ? pick.toUpperCase() : pick;
+  return <span className={`font-semibold ${tone}`}>{label}</span>;
 }
 
 function OutcomeBadge({ wager, stake }: { wager: Wager | null; stake: number }) {

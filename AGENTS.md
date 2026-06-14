@@ -57,19 +57,27 @@ for a fake-money family toy; don't carry this pattern into anything real. The PI
 is a **public** convenience lock (1–4 digits) shown openly in the UI — it just
 confirms the right person tapped in; it is not a secret.
 
-## Money & settlement invariants
+## Bet types & settlement invariants
 
-- Coins, stakes, and payouts are **whole integers**; lines/results are numeric
-  (halves like 2.5 allowed).
-- **Stake is escrowed at bet time** (debited from balance). Settlement credits
-  the gross payout back: won → `floor(stake × multiplier)`, push → `stake`,
-  lost → `0`. Net: winner `+stake×(mult−1)`, loser `−stake`, push `0`.
-- **OVER wins when result > line, UNDER when result < line, exact line = push.**
+- **Four event `kind`s** share one settlement engine
+  ([src/domain/settlement.ts](apps/web/src/domain/settlement.ts)): `over_under`
+  (numeric line), `yes_no`, `multiple_choice` (an `options` list), and `closest`
+  (numeric guess; nearest wins, ties split the pot).
+- **Two `payout_mode`s:** `fixed` (winner gets `floor(stake × multiplier)`) and
+  `pool` (pari-mutuel — winners split the whole pot in proportion to stake).
+  `closest` is always `pool`.
+- Coins/stakes/payouts are **whole integers**; lines/results/guesses are numeric.
+- **Stake is escrowed at bet time** (debited from balance); settlement credits the
+  gross payout back. A wager carries either a `pick` (over/under, yes/no, an
+  option) **or** a `guess` (closest) — never both.
+- **Refund-all:** Over/Under landing exactly on the line, OR any event where
+  nobody backed a winning side, refunds every stake (nobody loses coins they
+  couldn't win).
 - One wager per player per event (DB unique constraint); placing again
   **replaces** the bet — refund the old escrow, then debit the new stake.
-- The settlement and validation rules are in [src/domain/settlement.ts](apps/web/src/domain/settlement.ts)
-  and [src/domain/wager-rules.ts](apps/web/src/domain/wager-rules.ts). **Change
-  the rule there and update its test** — don't reimplement payout math in an action.
+- **Change a rule in [settlement.ts](apps/web/src/domain/settlement.ts) /
+  [wager-rules.ts](apps/web/src/domain/wager-rules.ts) and update its test** —
+  don't reimplement payout math in an action.
 
 ## TypeScript
 

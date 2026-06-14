@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { BetForm } from '../../../components/bet-form';
 import { ShareButton } from '../../../components/share-button';
 import { formatCoins } from '../../../domain/coins';
-import type { Player, Wager } from '../../../domain/types';
+import type { BettingEvent, Player, Wager } from '../../../domain/types';
 import { getEvent } from '../../../lib/db/events';
 import { listPlayers } from '../../../lib/db/players';
 import { listWagersByEvent } from '../../../lib/db/wagers';
@@ -12,6 +12,25 @@ import { currentPlayer } from '../../../lib/session';
 import { SettleForm } from './_components/settle-form';
 
 export const dynamic = 'force-dynamic';
+
+function describeLine(event: BettingEvent): string {
+  switch (event.kind) {
+    case 'over_under':
+      return `Line ${event.line} ${event.unit}`;
+    case 'yes_no':
+      return 'Yes / No';
+    case 'multiple_choice':
+      return `Options: ${(event.options ?? []).join(', ')}`;
+    case 'closest':
+      return `Closest guess (${event.unit})`;
+  }
+}
+
+function describeResult(event: BettingEvent): string {
+  if (event.kind === 'yes_no') return (event.resultText ?? '').toUpperCase();
+  if (event.kind === 'multiple_choice') return event.resultText ?? '';
+  return `${event.result} ${event.unit}`;
+}
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,6 +46,8 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const byId = new Map<string, Player>(players.map((p) => [p.id, p]));
   const mine = wagers.find((w) => w.playerId === player.id) ?? null;
   const isOpen = event.status === 'open';
+  const payoutLabel =
+    event.payoutMode === 'pool' ? 'shared pot' : `${event.payoutMultiplier}× payout`;
 
   return (
     <div className="space-y-6">
@@ -41,19 +62,18 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           <ShareButton
             path={`/events/${event.id}`}
             title={`Corgi Casinos: ${event.title}`}
-            text={`🐶 Bet OVER or UNDER on "${event.title}" (line ${event.line} ${event.unit}) — Corgi Casinos`}
+            text={`🐶 Bet on "${event.title}" — Corgi Casinos`}
           />
         </div>
         {event.description ? <p className="text-on-surface-variant">{event.description}</p> : null}
         <p className="text-on-surface-variant mt-2 text-sm">
-          Line <span className="text-on-surface font-semibold">{event.line}</span> {event.unit} ·
-          payout {event.payoutMultiplier}× ·{' '}
+          {describeLine(event)} · {payoutLabel} ·{' '}
           {isOpen ? (
             <span className="text-primary">open for bets</span>
           ) : (
             <span>
-              settled — final <span className="text-on-surface font-semibold">{event.result}</span>{' '}
-              {event.unit}
+              settled —{' '}
+              <span className="text-on-surface font-semibold">{describeResult(event)}</span>
             </span>
           )}
         </p>
@@ -64,10 +84,13 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           <h2 className="text-title-lg">Your bet</h2>
           <BetForm
             eventId={event.id}
+            kind={event.kind}
+            payoutMode={event.payoutMode}
             unit={event.unit}
             line={event.line}
+            options={event.options}
             payoutMultiplier={event.payoutMultiplier}
-            current={mine ? { direction: mine.direction, stake: mine.stake } : null}
+            current={mine ? { pick: mine.pick, guess: mine.guess, stake: mine.stake } : null}
           />
         </section>
       ) : null}
@@ -87,9 +110,30 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         )}
       </section>
 
-      {isOpen ? <SettleForm eventId={event.id} unit={event.unit} /> : null}
+      {isOpen ? (
+        <SettleForm
+          eventId={event.id}
+          kind={event.kind}
+          unit={event.unit}
+          options={event.options}
+        />
+      ) : null}
     </div>
   );
+}
+
+function PickBadge({ wager }: { wager: Wager }) {
+  if (wager.guess !== null) {
+    return <span className="text-on-surface">guessed {wager.guess}</span>;
+  }
+  const pick = wager.pick ?? '';
+  if (pick === 'over' || pick === 'yes') {
+    return <span className="text-over">{pick.toUpperCase()}</span>;
+  }
+  if (pick === 'under' || pick === 'no') {
+    return <span className="text-under">{pick.toUpperCase()}</span>;
+  }
+  return <span className="text-on-surface">{pick}</span>;
 }
 
 function WagerRow({
@@ -106,9 +150,7 @@ function WagerRow({
       <span className="flex items-center gap-2">
         <span aria-hidden>{player?.emoji ?? '🐶'}</span>
         <span className="font-medium">{player?.name ?? 'Unknown'}</span>
-        <span className={wager.direction === 'over' ? 'text-over' : 'text-under'}>
-          {wager.direction.toUpperCase()}
-        </span>
+        <PickBadge wager={wager} />
         <span className="text-on-surface-variant">{formatCoins(wager.stake)} 🪙</span>
       </span>
       {settled ? <SettledOutcome wager={wager} /> : null}

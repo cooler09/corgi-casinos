@@ -1,4 +1,4 @@
-import type { Direction, Outcome, Wager } from '../../domain/types';
+import type { Outcome, Wager } from '../../domain/types';
 import { db } from '../supabase/server';
 import type { Database } from '../supabase/types';
 
@@ -9,7 +9,8 @@ function toWager(row: WagerRow): Wager {
     id: row.id,
     eventId: row.event_id,
     playerId: row.player_id,
-    direction: row.direction as Direction,
+    pick: row.pick,
+    guess: row.guess,
     stake: row.stake,
     outcome: row.outcome as Outcome | null,
     payout: row.payout,
@@ -48,7 +49,8 @@ export async function getWager(eventId: string, playerId: string): Promise<Wager
 export async function upsertWager(input: {
   eventId: string;
   playerId: string;
-  direction: Direction;
+  pick: string | null;
+  guess: number | null;
   stake: number;
 }): Promise<Wager> {
   const { data, error } = await db()
@@ -57,7 +59,8 @@ export async function upsertWager(input: {
       {
         event_id: input.eventId,
         player_id: input.playerId,
-        direction: input.direction,
+        pick: input.pick,
+        guess: input.guess,
         stake: input.stake,
       },
       { onConflict: 'event_id,player_id' },
@@ -68,11 +71,7 @@ export async function upsertWager(input: {
   return toWager(data);
 }
 
-export async function setWagerOutcome(
-  id: string,
-  outcome: Outcome,
-  payout: number,
-): Promise<void> {
+export async function setWagerOutcome(id: string, outcome: Outcome, payout: number): Promise<void> {
   const { error } = await db().from('wagers').update({ outcome, payout }).eq('id', id);
   if (error) throw new Error(error.message);
 }
