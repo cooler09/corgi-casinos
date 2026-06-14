@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { BetForm } from '../../../components/bet-form';
+import { ShareButton } from '../../../components/share-button';
 import { formatCoins } from '../../../domain/coins';
 import type { Player, Wager } from '../../../domain/types';
 import { getEvent } from '../../../lib/db/events';
@@ -16,7 +17,8 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
 
   const player = await currentPlayer();
-  if (!player) redirect('/');
+  // Preserve the destination so a shared link lands here after login.
+  if (!player) redirect(`/?next=${encodeURIComponent(`/events/${id}`)}`);
 
   const event = await getEvent(id);
   if (!event) notFound();
@@ -29,27 +31,36 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/play" className="text-sm text-on-surface-variant hover:text-primary">
-          ← Back to play
-        </Link>
-        <h1 className="mt-1 text-headline-lg">{event.title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Link href="/play" className="text-on-surface-variant hover:text-primary text-sm">
+              ← Back to play
+            </Link>
+            <h1 className="text-headline-lg mt-1">{event.title}</h1>
+          </div>
+          <ShareButton
+            path={`/events/${event.id}`}
+            title={`Corgi Casinos: ${event.title}`}
+            text={`🐶 Bet OVER or UNDER on "${event.title}" (line ${event.line} ${event.unit}) — Corgi Casinos`}
+          />
+        </div>
         {event.description ? <p className="text-on-surface-variant">{event.description}</p> : null}
-        <p className="mt-2 text-sm text-on-surface-variant">
-          Line <span className="font-semibold text-on-surface">{event.line}</span> {event.unit} ·
+        <p className="text-on-surface-variant mt-2 text-sm">
+          Line <span className="text-on-surface font-semibold">{event.line}</span> {event.unit} ·
           payout {event.payoutMultiplier}× ·{' '}
           {isOpen ? (
             <span className="text-primary">open for bets</span>
           ) : (
             <span>
-              settled — final{' '}
-              <span className="font-semibold text-on-surface">{event.result}</span> {event.unit}
+              settled — final <span className="text-on-surface font-semibold">{event.result}</span>{' '}
+              {event.unit}
             </span>
           )}
         </p>
       </div>
 
       {isOpen ? (
-        <section className="space-y-3 rounded-2xl border border-outline bg-surface-container p-4">
+        <section className="border-outline bg-surface-container space-y-3 rounded-2xl border p-4">
           <h2 className="text-title-lg">Your bet</h2>
           <BetForm
             eventId={event.id}
@@ -68,7 +79,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         {wagers.length === 0 ? (
           <p className="text-on-surface-variant">No bets yet.</p>
         ) : (
-          <ul className="divide-y divide-outline overflow-hidden rounded-xl border border-outline">
+          <ul className="divide-outline border-outline divide-y overflow-hidden rounded-xl border">
             {wagers.map((w) => (
               <WagerRow key={w.id} wager={w} player={byId.get(w.playerId)} settled={!isOpen} />
             ))}
@@ -91,7 +102,7 @@ function WagerRow({
   settled: boolean;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 bg-surface-container px-4 py-3">
+    <li className="bg-surface-container flex items-center justify-between gap-3 px-4 py-3">
       <span className="flex items-center gap-2">
         <span aria-hidden>{player?.emoji ?? '🐶'}</span>
         <span className="font-medium">{player?.name ?? 'Unknown'}</span>
@@ -108,10 +119,12 @@ function WagerRow({
 function SettledOutcome({ wager }: { wager: Wager }) {
   if (wager.outcome === 'won') {
     const net = (wager.payout ?? 0) - wager.stake;
-    return <span className="text-sm font-semibold text-success">won +{formatCoins(net)} 🪙</span>;
+    return <span className="text-success text-sm font-semibold">won +{formatCoins(net)} 🪙</span>;
   }
   if (wager.outcome === 'push') {
-    return <span className="text-sm text-on-surface-variant">push</span>;
+    return <span className="text-on-surface-variant text-sm">push</span>;
   }
-  return <span className="text-sm font-semibold text-error">lost −{formatCoins(wager.stake)} 🪙</span>;
+  return (
+    <span className="text-error text-sm font-semibold">lost −{formatCoins(wager.stake)} 🪙</span>
+  );
 }

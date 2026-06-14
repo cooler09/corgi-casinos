@@ -21,7 +21,7 @@ interface RosterEntry {
 
 const EMOJI_CHOICES = ['🐶', '🐕', '🦴', '🐾', '👑', '⭐', '🍀', '🎲', '🦊', '🐱', '🐢', '🦄'];
 
-export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
+export function LoginScreen({ roster, next }: { roster: RosterEntry[]; next: string }) {
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<RosterEntry | null>(null);
   const [pin, setPin] = useState('');
@@ -31,8 +31,9 @@ export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
   function login(id: string, pinValue: string) {
     setError(null);
     startTransition(async () => {
-      const res = await loginAction(id, pinValue);
-      // On success loginAction redirects to /play; only failure returns here.
+      // `next` carries a shared-link target (e.g. /events/123) so login lands there.
+      const res = await loginAction(id, pinValue, next);
+      // On success loginAction redirects; only failure returns here.
       if (res && 'error' in res) setError(res.error);
     });
   }
@@ -238,7 +239,7 @@ function AddMemberForm({
 
       <div>
         <label className={fieldLabelClass} htmlFor="new-pin">
-          PIN (optional, 4 digits)
+          PIN (optional, 1–4 digits — shown to everyone)
         </label>
         <input
           id="new-pin"

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createPlayer, getPlayer, getPlayerByName, setPlayerPin } from '../lib/db/players';
+import { safeRedirectPath } from '../lib/navigation';
 import { clearCurrentPlayer, setCurrentPlayer } from '../lib/session';
 
 // PINs are not secret here — they're a public "tap to confirm it's you" gate for
@@ -14,12 +15,13 @@ const PIN_PATTERN = /^\d{1,4}$/;
 export async function loginAction(
   playerId: string,
   pin: string,
+  next?: string,
 ): Promise<{ error: string } | void> {
   const player = await getPlayer(playerId);
   if (!player) return { error: 'That player no longer exists.' };
   if (player.pin && player.pin !== pin.trim()) return { error: 'Incorrect PIN.' };
   await setCurrentPlayer(player.id);
-  redirect('/play');
+  redirect(safeRedirectPath(next));
 }
 
 export async function logoutAction(): Promise<void> {
