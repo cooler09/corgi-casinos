@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+.playwright/
+
+# Env — never commit real secrets; .env.example is the only tracked env file
+.env
+.env.local
+.env.*.local
+.env.dev
+.env.prod
+
+# Editor / OS
+.DS_Store
+*.log
+
+# Vercel
+.vercel/
+
+# Supabase (Optional integration) — local stack artifacts
+supabase/.branches
+supabase/.temp
+supabase/.env

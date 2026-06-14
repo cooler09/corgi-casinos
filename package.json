@@ -1,0 +1,41 @@
+{
+  "name": "corgi-casinos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Corgi Casinos — a family-friendly, fake-money over/under betting game.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=22.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "//scripts": "turbo fans each task out across every workspace package. The `format` pair runs prettier at the root.",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test -- --coverage",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "@vitest/coverage-v8": "^2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tsx": "^4.22.3",
+    "turbo": "^2.9.14",
+    "typescript": "^6.0.3",
+    "vitest": "^2.1.9"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs,json,md,css,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
