@@ -6,6 +6,7 @@ import { Coins } from '../../components/coins-badge';
 import { primaryButtonClass } from '../../components/primary-button';
 import { ShareButton } from '../../components/share-button';
 import { formatCoins } from '../../domain/coins';
+import { summarizeBet } from '../../domain/describe';
 import type { Wager } from '../../domain/types';
 import { listEvents } from '../../lib/db/events';
 import { listAllWagers } from '../../lib/db/wagers';
@@ -78,8 +79,8 @@ export default async function PlayPage() {
                       </span>
                       <ShareButton
                         path={`/events/${event.id}`}
-                        title={`Corgi Casinos: ${event.title}`}
-                        text={`🐶 Bet OVER or UNDER on "${event.title}" (line ${event.line} ${event.unit}) — Corgi Casinos`}
+                        title={event.title}
+                        text={`${summarizeBet(event)} — place your bet on Corgi Casinos 🐶`}
                       />
                     </div>
                   </div>

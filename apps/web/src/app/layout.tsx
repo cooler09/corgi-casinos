@@ -8,15 +8,32 @@ import { logoutAction } from './actions';
 
 import './globals.css';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+const DESCRIPTION = 'A fake-money over/under betting game for family and friends.';
+
 export const metadata: Metadata = {
+  // Absolute base so social-preview (og:image) URLs resolve correctly.
+  metadataBase: new URL(SITE_URL),
   title: 'Corgi Casinos',
-  description: 'A fake-money over/under betting game for family and friends.',
-  // Private family app — keep it out of search engines. Emits
+  description: DESCRIPTION,
+  // Private app — keep it out of search results (noindex), while still letting
+  // link-preview bots fetch the Open Graph tags below (see app/robots.ts). Emits
   // <meta name="robots" content="noindex, nofollow"> on every page.
   robots: {
     index: false,
     follow: false,
     googleBot: { index: false, follow: false },
+  },
+  openGraph: {
+    siteName: 'Corgi Casinos',
+    title: 'Corgi Casinos',
+    description: DESCRIPTION,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Corgi Casinos',
+    description: DESCRIPTION,
   },
 };
 

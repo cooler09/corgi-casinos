@@ -1,9 +1,12 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { BetForm } from '../../../components/bet-form';
+import { primaryButtonClass } from '../../../components/primary-button';
 import { ShareButton } from '../../../components/share-button';
 import { formatCoins } from '../../../domain/coins';
+import { payoutLabel, summarizeBet } from '../../../domain/describe';
 import type { BettingEvent, Player, Wager } from '../../../domain/types';
 import { getEvent } from '../../../lib/db/events';
 import { listPlayers } from '../../../lib/db/players';
@@ -13,17 +16,22 @@ import { SettleForm } from './_components/settle-form';
 
 export const dynamic = 'force-dynamic';
 
-function describeLine(event: BettingEvent): string {
-  switch (event.kind) {
-    case 'over_under':
-      return `Line ${event.line} ${event.unit}`;
-    case 'yes_no':
-      return 'Yes / No';
-    case 'multiple_choice':
-      return `Options: ${(event.options ?? []).join(', ')}`;
-    case 'closest':
-      return `Closest guess (${event.unit})`;
-  }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getEvent(id);
+  if (!event) return { title: 'Corgi Casinos' };
+
+  const description = `${summarizeBet(event)} · ${payoutLabel(event)} — bet fake coins with family & friends on Corgi Casinos.`;
+  return {
+    title: `${event.title} · Corgi Casinos`,
+    description,
+    openGraph: { title: event.title, description, type: 'website' },
+    twitter: { card: 'summary_large_image', title: event.title, description },
+  };
 }
 
 function describeResult(event: BettingEvent): string {
@@ -35,39 +43,41 @@ function describeResult(event: BettingEvent): string {
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
+  // Public preview: don't redirect logged-out visitors (so shared links unfurl
+  // and the page is viewable). The bet/settle actions are gated below.
   const player = await currentPlayer();
-  // Preserve the destination so a shared link lands here after login.
-  if (!player) redirect(`/?next=${encodeURIComponent(`/events/${id}`)}`);
 
   const event = await getEvent(id);
   if (!event) notFound();
 
   const [wagers, players] = await Promise.all([listWagersByEvent(id), listPlayers()]);
   const byId = new Map<string, Player>(players.map((p) => [p.id, p]));
-  const mine = wagers.find((w) => w.playerId === player.id) ?? null;
+  const mine = player ? (wagers.find((w) => w.playerId === player.id) ?? null) : null;
   const isOpen = event.status === 'open';
-  const payoutLabel =
-    event.payoutMode === 'pool' ? 'shared pot' : `${event.payoutMultiplier}× payout`;
+  const loginHref = `/?next=${encodeURIComponent(`/events/${event.id}`)}`;
 
   return (
     <div className="space-y-6">
       <div>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <Link href="/play" className="text-on-surface-variant hover:text-primary text-sm">
-              ← Back to play
+            <Link
+              href={player ? '/play' : '/'}
+              className="text-on-surface-variant hover:text-primary text-sm"
+            >
+              ← {player ? 'Back to play' : 'Home'}
             </Link>
             <h1 className="text-headline-lg mt-1">{event.title}</h1>
           </div>
           <ShareButton
             path={`/events/${event.id}`}
-            title={`Corgi Casinos: ${event.title}`}
-            text={`🐶 Bet on "${event.title}" — Corgi Casinos`}
+            title={event.title}
+            text={`${summarizeBet(event)} — place your bet on Corgi Casinos 🐶`}
           />
         </div>
         {event.description ? <p className="text-on-surface-variant">{event.description}</p> : null}
         <p className="text-on-surface-variant mt-2 text-sm">
-          {describeLine(event)} · {payoutLabel} ·{' '}
+          {summarizeBet(event)} · {payoutLabel(event)} ·{' '}
           {isOpen ? (
             <span className="text-primary">open for bets</span>
           ) : (
@@ -79,21 +89,30 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         </p>
       </div>
 
-      {isOpen ? (
-        <section className="border-outline bg-surface-container space-y-3 rounded-2xl border p-4">
-          <h2 className="text-title-lg">Your bet</h2>
-          <BetForm
-            eventId={event.id}
-            kind={event.kind}
-            payoutMode={event.payoutMode}
-            unit={event.unit}
-            line={event.line}
-            options={event.options}
-            payoutMultiplier={event.payoutMultiplier}
-            current={mine ? { pick: mine.pick, guess: mine.guess, stake: mine.stake } : null}
-          />
+      {player ? (
+        isOpen ? (
+          <section className="border-outline bg-surface-container space-y-3 rounded-2xl border p-4">
+            <h2 className="text-title-lg">Your bet</h2>
+            <BetForm
+              eventId={event.id}
+              kind={event.kind}
+              payoutMode={event.payoutMode}
+              unit={event.unit}
+              line={event.line}
+              options={event.options}
+              payoutMultiplier={event.payoutMultiplier}
+              current={mine ? { pick: mine.pick, guess: mine.guess, stake: mine.stake } : null}
+            />
+          </section>
+        ) : null
+      ) : (
+        <section className="border-outline bg-surface-container space-y-3 rounded-2xl border p-4 text-center">
+          <p className="text-on-surface-variant">Want in on this one?</p>
+          <Link href={loginHref} className={primaryButtonClass()}>
+            🐶 Pick your player to bet
+          </Link>
         </section>
-      ) : null}
+      )}
 
       <section className="space-y-2">
         <h2 className="text-title-lg">
@@ -110,7 +129,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         )}
       </section>
 
-      {isOpen ? (
+      {player && isOpen ? (
         <SettleForm
           eventId={event.id}
           kind={event.kind}
