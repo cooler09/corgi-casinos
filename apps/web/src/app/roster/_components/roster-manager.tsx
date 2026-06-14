@@ -19,7 +19,8 @@ interface Member {
   name: string;
   emoji: string;
   balance: number;
-  hasPin: boolean;
+  // Public PIN (a soft "it's you" gate), shown openly in the roster.
+  pin: string | null;
 }
 
 const EMOJI_CHOICES = ['🐶', '🐕', '🦴', '🐾', '👑', '⭐', '🍀', '🎲', '🦊', '🐱', '🐢', '🦄'];
@@ -67,7 +68,7 @@ export function RosterManager({ members }: { members: Member[] }) {
           e.preventDefault();
           addMember();
         }}
-        className="space-y-4 rounded-2xl border border-outline bg-surface-container p-4"
+        className="border-outline bg-surface-container space-y-4 rounded-2xl border p-4"
       >
         <h2 className="text-title-lg">Add a family member</h2>
         {error ? <Alert variant="error">{error}</Alert> : null}
@@ -105,7 +106,7 @@ export function RosterManager({ members }: { members: Member[] }) {
 
         <div>
           <label className={fieldLabelClass} htmlFor="pin">
-            PIN (optional, 4 digits)
+            PIN (optional, 1–4 digits — shown to everyone)
           </label>
           <input
             id="pin"
@@ -138,7 +139,7 @@ function MemberRow({
   onError: (message: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [pin, setPin] = useState('');
+  const [pin, setPin] = useState(member.pin ?? '');
   const [, startTransition] = useTransition();
 
   function savePin(value: string) {
@@ -155,13 +156,15 @@ function MemberRow({
   }
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline bg-surface-container px-4 py-3">
+    <li className="border-outline bg-surface-container flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
       <span className="flex items-center gap-3">
         <span className="text-2xl" aria-hidden>
           {member.emoji}
         </span>
         <span className="font-semibold">{member.name}</span>
-        {member.hasPin ? <span className="text-xs text-on-surface-variant">🔒 PIN set</span> : null}
+        {member.pin ? (
+          <span className="text-on-surface-variant text-xs">🔢 PIN {member.pin}</span>
+        ) : null}
       </span>
 
       <span className="flex items-center gap-3">
@@ -184,7 +187,7 @@ function MemberRow({
             >
               Save
             </button>
-            {member.hasPin ? (
+            {member.pin ? (
               <button
                 type="button"
                 className={secondaryButtonClass('sm')}
@@ -196,8 +199,15 @@ function MemberRow({
             ) : null}
           </span>
         ) : (
-          <button type="button" className={tonalButtonClass('sm')} onClick={() => setEditing(true)}>
-            {member.hasPin ? 'Change PIN' : 'Set PIN'}
+          <button
+            type="button"
+            className={tonalButtonClass('sm')}
+            onClick={() => {
+              setPin(member.pin ?? '');
+              setEditing(true);
+            }}
+          >
+            {member.pin ? 'Change PIN' : 'Set PIN'}
           </button>
         )}
       </span>

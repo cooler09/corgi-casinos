@@ -3,15 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import {
-  createPlayer,
-  getPlayer,
-  getPlayerByName,
-  setPlayerPin,
-} from '../lib/db/players';
+import { createPlayer, getPlayer, getPlayerByName, setPlayerPin } from '../lib/db/players';
 import { clearCurrentPlayer, setCurrentPlayer } from '../lib/session';
 
-const PIN_PATTERN = /^\d{4}$/;
+// PINs are not secret here — they're a public "tap to confirm it's you" gate for
+// a family game, shown openly in the UI. Keep them short and forgiving: 1–4 digits.
+const PIN_PATTERN = /^\d{1,4}$/;
 
 /** Log in as a roster member, checking the PIN if one is set. */
 export async function loginAction(
@@ -41,7 +38,7 @@ export async function createPlayerAction(input: {
   if (name.length > 24) return { error: 'That name is a bit long.' };
 
   const pin = input.pin.trim();
-  if (pin && !PIN_PATTERN.test(pin)) return { error: 'PIN must be exactly 4 digits.' };
+  if (pin && !PIN_PATTERN.test(pin)) return { error: 'PIN must be 1–4 digits.' };
 
   const existing = await getPlayerByName(name);
   if (existing) return { error: 'Someone already has that name.' };
@@ -60,7 +57,7 @@ export async function setPinAction(
   pin: string,
 ): Promise<{ error: string } | { ok: true }> {
   const trimmed = pin.trim();
-  if (trimmed && !PIN_PATTERN.test(trimmed)) return { error: 'PIN must be exactly 4 digits.' };
+  if (trimmed && !PIN_PATTERN.test(trimmed)) return { error: 'PIN must be 1–4 digits.' };
   await setPlayerPin(playerId, trimmed || null);
   revalidatePath('/roster');
   return { ok: true };

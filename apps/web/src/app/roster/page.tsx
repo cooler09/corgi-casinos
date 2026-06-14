@@ -15,7 +15,7 @@ export default async function RosterPage() {
     name: p.name,
     emoji: p.emoji,
     balance: p.balance,
-    hasPin: p.pin !== null,
+    pin: p.pin,
   }));
 
   return (

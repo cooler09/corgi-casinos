@@ -15,7 +15,8 @@ interface RosterEntry {
   id: string;
   name: string;
   emoji: string;
-  hasPin: boolean;
+  // PINs are public in this family game — shown openly so anyone can tap in.
+  pin: string | null;
 }
 
 const EMOJI_CHOICES = ['🐶', '🐕', '🦴', '🐾', '👑', '⭐', '🍀', '🎲', '🦊', '🐱', '🐢', '🦄'];
@@ -39,7 +40,7 @@ export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
   function choose(entry: RosterEntry) {
     setError(null);
     setPin('');
-    if (entry.hasPin) {
+    if (entry.pin) {
       setSelected(entry);
     } else {
       login(entry.id, '');
@@ -86,8 +87,8 @@ export function LoginScreen({ roster }: { roster: RosterEntry[] }) {
                   {entry.emoji}
                 </span>
                 <span className="font-semibold">{entry.name}</span>
-                {entry.hasPin ? (
-                  <span className="text-on-surface-variant text-xs">🔒 PIN</span>
+                {entry.pin ? (
+                  <span className="text-on-surface-variant text-xs">🔢 PIN {entry.pin}</span>
                 ) : null}
               </button>
             </li>
@@ -145,6 +146,10 @@ function PinPrompt({
         {entry.emoji}
       </div>
       <h1 className="text-headline-sm">Enter {entry.name}&apos;s PIN</h1>
+      <p className="text-on-surface-variant text-sm">
+        No secret here — the PIN is{' '}
+        <span className="text-on-surface font-semibold">{entry.pin}</span>
+      </p>
       {error ? <Alert variant="error">{error}</Alert> : null}
       <form
         onSubmit={(e) => {
