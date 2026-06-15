@@ -51,13 +51,17 @@ function decideWinners(
 
 /**
  * Settle every wager on an event. Stake was escrowed at bet time, so `payout` is
- * the gross amount credited back.
+ * the gross amount credited back. The House is the counterparty: it funds every
+ * payout and keeps every leftover stake, so the caller's house P&L for the event
+ * is simply `sum(stakes) − sum(payouts)`.
  *
- * - **fixed** mode: winners get floor(stake × multiplier); losers 0.
+ * - **fixed** mode: winners get floor(stake × multiplier); losers 0. With no
+ *   winning backer everyone loses (the House keeps every stake).
  * - **pool** mode (pari-mutuel): winners split the whole pot in proportion to
- *   their stake; losers 0.
- * - **push** (Over/Under landing exactly on the line) or **no winners at all**:
- *   everyone is refunded (nobody loses coins they couldn't win).
+ *   their stake; losers 0. With no winning backer the House sweeps the pot
+ *   (everyone loses).
+ * - **push** (Over/Under landing exactly on the line): everyone is refunded and
+ *   the House nets zero.
  */
 export function settle(
   event: SettlementEvent,
@@ -65,11 +69,15 @@ export function settle(
 ): WagerSettlement[] {
   const { winners, push } = decideWinners(event, wagers);
 
-  if (push || winners.size === 0) {
+  // A true push refunds everyone regardless of payout mode (e.g. Over/Under
+  // landing exactly on the line); no coins change hands.
+  if (push) {
     return wagers.map((w) => ({ wagerId: w.id, outcome: 'push', payout: w.stake }));
   }
 
   if (event.payoutMode === 'fixed') {
+    // Fixed odds are funded by the House, not a shared pot — so when nobody
+    // backed the winning side everyone simply loses (no winner ⇒ all 'lost').
     return wagers.map((w) =>
       winners.has(w.id)
         ? { wagerId: w.id, outcome: 'won', payout: Math.floor(w.stake * event.payoutMultiplier) }
@@ -77,7 +85,12 @@ export function settle(
     );
   }
 
-  // pool: split the entire pot among winners in proportion to their stake.
+  // pool (pari-mutuel): split the entire pot among winners in proportion to their
+  // stake. With no winning backer there's nothing to split, so the House sweeps
+  // the whole pot — everyone loses.
+  if (winners.size === 0) {
+    return wagers.map((w) => ({ wagerId: w.id, outcome: 'lost', payout: 0 }));
+  }
   const pot = wagers.reduce((sum, w) => sum + w.stake, 0);
   const winnerStake = wagers.filter((w) => winners.has(w.id)).reduce((sum, w) => sum + w.stake, 0);
   return wagers.map((w) =>

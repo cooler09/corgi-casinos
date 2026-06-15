@@ -1,4 +1,4 @@
-// Hand-written to match supabase/migrations/0001_init.sql. If you adopt the
+// Hand-written to match supabase/migrations/*.sql. If you adopt the
 // Supabase CLI, regenerate with:
 //   supabase gen types typescript --linked > apps/web/src/lib/supabase/types.ts
 // and commit the result so `typecheck` sees schema changes.
@@ -123,6 +123,24 @@ export type Database = {
           outcome?: string | null;
           payout?: number | null;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      house: {
+        Row: {
+          id: boolean;
+          balance: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          balance?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          balance?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };

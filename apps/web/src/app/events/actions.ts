@@ -7,6 +7,7 @@ import { settle } from '../../domain/settlement';
 import type { BettingEvent, EventKind, PayoutMode } from '../../domain/types';
 import { validateWager, WAGER_ERROR_MESSAGES } from '../../domain/wager-rules';
 import { createEvent, getEvent, markEventSettled } from '../../lib/db/events';
+import { adjustHouseBalance } from '../../lib/db/house';
 import { adjustBalance } from '../../lib/db/players';
 import { getWager, listWagersByEvent, setWagerOutcome, upsertWager } from '../../lib/db/wagers';
 import { currentPlayer } from '../../lib/session';
@@ -116,6 +117,14 @@ export async function settleEventAction(
     if (s.payout > 0) await adjustBalance(wagerPlayerId(wagers, s.wagerId), s.payout);
     await setWagerOutcome(s.wagerId, s.outcome, s.payout);
   }
+
+  // The House is the counterparty: it funds the payouts and keeps the rest of
+  // the escrowed stakes. Net P&L = coins staked − coins paid back out (negative
+  // when a fixed-odds winner is paid more than the pot took in).
+  const totalStakes = wagers.reduce((sum, w) => sum + w.stake, 0);
+  const totalPayouts = settlements.reduce((sum, s) => sum + s.payout, 0);
+  const houseDelta = totalStakes - totalPayouts;
+  if (houseDelta !== 0) await adjustHouseBalance(houseDelta);
 
   await markEventSettled(eventId, {
     result: outcome.result,

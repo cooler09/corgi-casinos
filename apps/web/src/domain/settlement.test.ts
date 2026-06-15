@@ -117,10 +117,61 @@ describe('closest guess (pool)', () => {
   });
 });
 
-describe('no possible winner', () => {
-  it('refunds everyone if nobody picked the winning side', () => {
+describe('no winning backer (House wins)', () => {
+  it('fixed mode: everyone loses and the House keeps the stakes', () => {
     const event = evt({ kind: 'over_under', line: 2.5, result: 3 });
-    const rows = settle(event, [w('a', { pick: 'under', stake: 100 })]);
-    expect(payout(rows, 'a')).toEqual({ wagerId: 'a', outcome: 'push', payout: 100 });
+    const rows = settle(event, [
+      w('a', { pick: 'under', stake: 100 }),
+      w('b', { pick: 'under', stake: 50 }),
+    ]);
+    expect(rows.every((r) => r.outcome === 'lost' && r.payout === 0)).toBe(true);
+  });
+
+  it('pool mode: everyone loses and the House sweeps the pot', () => {
+    const event = evt({ kind: 'over_under', payoutMode: 'pool', line: 2.5, result: 3 });
+    const rows = settle(event, [
+      w('a', { pick: 'under', stake: 100 }),
+      w('b', { pick: 'under', stake: 100 }),
+    ]);
+    expect(rows.every((r) => r.outcome === 'lost' && r.payout === 0)).toBe(true);
+  });
+});
+
+// House P&L for an event is sum(stakes) − sum(payouts); the action credits this
+// to the House. These lock the conservation property the ledger relies on.
+describe('House take', () => {
+  const take = (wagers: ReadonlyArray<{ stake: number }>, rows: ReturnType<typeof settle>) =>
+    wagers.reduce((s, x) => s + x.stake, 0) - rows.reduce((s, r) => s + r.payout, 0);
+
+  it('fixed odds: House breaks even on an even-money win', () => {
+    const event = evt({ kind: 'over_under', line: 2.5, result: 3, payoutMultiplier: 2 });
+    const wagers = [
+      w('win', { pick: 'over', stake: 100 }),
+      w('lose', { pick: 'under', stake: 100 }),
+    ];
+    expect(take(wagers, settle(event, wagers))).toBe(0); // 200 staked − 200 paid out
+  });
+
+  it('fixed odds: House keeps every stake when nobody wins', () => {
+    const event = evt({ kind: 'over_under', line: 2.5, result: 3 });
+    const wagers = [w('a', { pick: 'under', stake: 100 }), w('b', { pick: 'under', stake: 50 })];
+    expect(take(wagers, settle(event, wagers))).toBe(150);
+  });
+
+  it('pool: House nets zero with a winner, sweeps the pot with none', () => {
+    const event = evt({ kind: 'over_under', payoutMode: 'pool', line: 2.5, result: 3 });
+    const withWinner = [
+      w('a', { pick: 'over', stake: 100 }),
+      w('b', { pick: 'under', stake: 100 }),
+    ];
+    expect(take(withWinner, settle(event, withWinner))).toBe(0);
+    const noWinner = [w('a', { pick: 'under', stake: 100 }), w('b', { pick: 'under', stake: 100 })];
+    expect(take(noWinner, settle(event, noWinner))).toBe(200);
+  });
+
+  it('push: House nets zero (everyone refunded)', () => {
+    const event = evt({ kind: 'over_under', line: 3, result: 3 });
+    const wagers = [w('a', { pick: 'over', stake: 100 }), w('b', { pick: 'under', stake: 100 })];
+    expect(take(wagers, settle(event, wagers))).toBe(0);
   });
 });

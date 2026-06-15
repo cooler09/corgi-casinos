@@ -72,9 +72,18 @@ logged-in member can reset anyone's via the roster.
 - **Stake is escrowed at bet time** (debited from balance); settlement credits the
   gross payout back. A wager carries either a `pick` (over/under, yes/no, an
   option) **or** a `guess` (closest) — never both.
-- **Refund-all:** Over/Under landing exactly on the line, OR any event where
-  nobody backed a winning side, refunds every stake (nobody loses coins they
-  couldn't win).
+- **The House is the counterparty.** It funds every winning payout and keeps
+  every leftover stake, so per settlement its P&L is `sum(stakes) − sum(payouts)`
+  and total coins across (players + house) stay conserved. The House balance MAY
+  go negative (a big fixed-odds win is coins it owes) — there's no `>= 0` check on
+  it. It lives in a singleton `house` row;
+  [settleEventAction](apps/web/src/app/events/actions.ts) reconciles it after
+  crediting players, and the scoreboard surfaces it.
+- **No winning backer ⇒ House wins.** If nobody backed the winning side, everyone
+  loses: in `fixed` mode the House keeps every stake; in `pool` mode the House
+  sweeps the whole pot.
+- **Refund-all (push):** Over/Under landing exactly on the line refunds every
+  stake and the House nets zero. This is the _only_ refund case.
 - One wager per player per event (DB unique constraint); placing again
   **replaces** the bet — refund the old escrow, then debit the new stake.
 - **Change a rule in [settlement.ts](apps/web/src/domain/settlement.ts) /
