@@ -84,6 +84,13 @@ logged-in member can reset anyone's via the roster.
   sweeps the whole pot.
 - **Refund-all (push):** Over/Under landing exactly on the line refunds every
   stake and the House nets zero. This is the _only_ refund case.
+- **Daily allowance:** any player may self-redeem `DAILY_ALLOWANCE` (1000) coins
+  once per rolling 24h via the Redeem button — see
+  [allowance.ts](apps/web/src/domain/allowance.ts) (`canRedeem`, `allowanceGrant`)
+  and `redeemAllowanceAction`. Eligibility is `now − last_redeemed_at >= 24h`; the
+  grant is trimmed so a redeem never lifts a balance past `ALLOWANCE_CAP` (5000)
+  — that caps allowances only (winnings may exceed it). The minted coins bypass
+  the House ledger.
 - One wager per player per event (DB unique constraint); placing again
   **replaces** the bet — refund the old escrow, then debit the new stake.
 - **Change a rule in [settlement.ts](apps/web/src/domain/settlement.ts) /

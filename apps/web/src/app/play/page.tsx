@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { BetForm } from '../../components/bet-form';
 import { Coins } from '../../components/coins-badge';
 import { primaryButtonClass } from '../../components/primary-button';
+import { RedeemButton } from '../../components/redeem-button';
 import { ShareButton } from '../../components/share-button';
+import { ALLOWANCE_COOLDOWN_MS, allowanceGrant } from '../../domain/allowance';
 import { formatCoins } from '../../domain/coins';
 import { summarizeBet } from '../../domain/describe';
 import type { Wager } from '../../domain/types';
@@ -26,9 +28,17 @@ export default async function PlayPage() {
     wagers.find((w) => w.eventId === eventId && w.playerId === player.id) ?? null;
   const betCount = (eventId: string): number => wagers.filter((w) => w.eventId === eventId).length;
 
+  // Eligibility itself is time-dependent (impure), so the client owns it; the
+  // page only passes the fixed epoch-ms the player becomes eligible (pure) plus
+  // the (cap-trimmed) grant they'd receive.
+  const redeemAt = player.lastRedeemedAt
+    ? new Date(player.lastRedeemedAt).getTime() + ALLOWANCE_COOLDOWN_MS
+    : 0;
+  const grant = allowanceGrant(player.balance);
+
   return (
     <div className="space-y-8">
-      <section className="flex items-center justify-between gap-3">
+      <section className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-headline-lg">
             Hey {player.emoji} {player.name}!
@@ -37,9 +47,12 @@ export default async function PlayPage() {
             Your bankroll: <Coins amount={player.balance} />
           </p>
         </div>
-        <Link href="/events/new" className={primaryButtonClass()}>
-          ➕ New event
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link href="/events/new" className={primaryButtonClass()}>
+            ➕ New event
+          </Link>
+          <RedeemButton redeemAt={redeemAt} grant={grant} />
+        </div>
       </section>
 
       <section className="space-y-4">

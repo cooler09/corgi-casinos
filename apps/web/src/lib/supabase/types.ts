@@ -13,6 +13,7 @@ export type Database = {
           emoji: string;
           pin: string | null;
           balance: number;
+          last_redeemed_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -21,6 +22,7 @@ export type Database = {
           emoji?: string;
           pin?: string | null;
           balance?: number;
+          last_redeemed_at?: string | null;
           created_at?: string;
         };
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           emoji?: string;
           pin?: string | null;
           balance?: number;
+          last_redeemed_at?: string | null;
           created_at?: string;
         };
         Relationships: [];

@@ -3,9 +3,16 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createPlayer, getPlayer, getPlayerByName, setPlayerPin } from '../lib/db/players';
+import { ALLOWANCE_CAP, allowanceGrant, canRedeem } from '../domain/allowance';
+import {
+  createPlayer,
+  getPlayer,
+  getPlayerByName,
+  redeemDailyAllowance,
+  setPlayerPin,
+} from '../lib/db/players';
 import { safeRedirectPath } from '../lib/navigation';
-import { clearCurrentPlayer, setCurrentPlayer } from '../lib/session';
+import { clearCurrentPlayer, currentPlayer, setCurrentPlayer } from '../lib/session';
 
 // PINs are not secret here — they're a public "tap to confirm it's you" gate for
 // a family game, shown openly in the UI. Keep them short and forgiving: 1–4 digits.
@@ -51,6 +58,27 @@ export async function createPlayerAction(input: {
   revalidatePath('/');
   revalidatePath('/roster');
   return { ok: true, id: player.id };
+}
+
+/** Redeem the daily allowance for the logged-in player (once per rolling 24h). */
+export async function redeemAllowanceAction(): Promise<
+  { error: string } | { ok: true; balance: number }
+> {
+  const player = await currentPlayer();
+  if (!player) return { error: 'Log in first.' };
+  if (!canRedeem(player.lastRedeemedAt, Date.now())) {
+    return { error: 'You already claimed your allowance today. Come back later!' };
+  }
+
+  const grant = allowanceGrant(player.balance);
+  if (grant <= 0) {
+    return { error: `You're already at the ${ALLOWANCE_CAP.toLocaleString('en-US')}-coin cap.` };
+  }
+
+  const balance = await redeemDailyAllowance(player.id, grant);
+  revalidatePath('/play');
+  revalidatePath('/scoreboard');
+  return { ok: true, balance };
 }
 
 /** Set or clear a member's PIN (empty string clears it). */

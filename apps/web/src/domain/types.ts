@@ -22,6 +22,8 @@ export interface Player {
   emoji: string;
   pin: string | null;
   balance: number;
+  /** When they last redeemed the daily allowance; null = never. */
+  lastRedeemedAt: string | null;
   createdAt: string;
 }
 

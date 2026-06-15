@@ -11,6 +11,7 @@ function toPlayer(row: PlayerRow): Player {
     emoji: row.emoji,
     pin: row.pin,
     balance: row.balance,
+    lastRedeemedAt: row.last_redeemed_at,
     createdAt: row.created_at,
   };
 }
@@ -64,6 +65,19 @@ export async function adjustBalance(id: string, delta: number): Promise<number> 
   if (!player) throw new Error('Player not found');
   const next = player.balance + delta;
   const { error } = await db().from('players').update({ balance: next }).eq('id', id);
+  if (error) throw new Error(error.message);
+  return next;
+}
+
+/** Credit the daily allowance and stamp the redemption time; returns the new balance. */
+export async function redeemDailyAllowance(id: string, amount: number): Promise<number> {
+  const player = await getPlayer(id);
+  if (!player) throw new Error('Player not found');
+  const next = player.balance + amount;
+  const { error } = await db()
+    .from('players')
+    .update({ balance: next, last_redeemed_at: new Date().toISOString() })
+    .eq('id', id);
   if (error) throw new Error(error.message);
   return next;
 }
