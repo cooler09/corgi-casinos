@@ -104,12 +104,15 @@ export function LoginScreen({ roster, next }: { roster: RosterEntry[]; next: str
           onCreate={(input) => {
             setError(null);
             startTransition(async () => {
-              const res = await createPlayerAction(input);
-              if ('error' in res) {
-                setError(res.error);
+              const created = await createPlayerAction(input);
+              if ('error' in created) {
+                setError(created.error);
                 return;
               }
-              login(res.id, '');
+              // Auto-login with the PIN they just set — an empty PIN would fail
+              // the check for a PIN-protected account.
+              const res = await loginAction(created.id, input.pin, next);
+              if (res && 'error' in res) setError(res.error);
             });
           }}
         />
